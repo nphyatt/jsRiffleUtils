@@ -1,0 +1,19 @@
+{
+  "name": "jsriffleutils",
+  "version": "0.0.1",
+  "description": "A set of utility scripts that are hand for command line use of working with Exis.",
+  "main": "utils.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Exis",
+    "jsRiffle"
+  ],
+  "author": "Nicholas Hyatt",
+  "license": "ISC",
+  "dependencies": {
+    "jsriffle": "^0.4.8",
+    "minimist": "^1.2.0"
+  }
+}
