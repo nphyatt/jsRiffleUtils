@@ -14,6 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "jsriffle": "^0.4.8",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "prompt": "^1.0.0"
   }
 }
