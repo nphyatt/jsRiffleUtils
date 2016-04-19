@@ -13,6 +13,7 @@
   "author": "Nicholas Hyatt",
   "license": "ISC",
   "dependencies": {
+    "colors": "^1.1.2",
     "jsriffle": "^0.4.8",
     "minimist": "^1.2.0",
     "prompt": "^1.0.0",

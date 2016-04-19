@@ -36,3 +36,8 @@ jspm_packages
 
 # Optional REPL history
 .node_repl_history
+
+
+# Exis Settings directories
+.xs_profiles
+.xs_aliases

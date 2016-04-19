@@ -4,8 +4,10 @@ var exp = module.exports;
 var request = require('request');
 var Q = global.Q;
 
-//TODO allow for connection to other urls
 var registrar = 'https://node.exis.io:8880';
+exp.setRegistrar = function(url){
+  registrar = url;
+}
 
 exp.loginAnonymous = function(){
   var p = Q.defer();

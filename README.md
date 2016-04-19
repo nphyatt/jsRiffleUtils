@@ -19,6 +19,16 @@ node token_getter.js
 > Login with your Exis Developer Credentials to open a connection and than use riffle commands from cli
 
 ```
-//follow prompt
+//login with username and password
 node exis_cli.js
+
+//use enviroment variables EXIS_DOMAIN and EXIS_TOKEN as credentials
+node exis_cli.js -e
+
+//use a saved profile as credentials
+node exis_cli.js -p domain
+
+//help dialoge
+node exis_cli.js --help
+
 ```
