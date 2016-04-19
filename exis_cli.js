@@ -98,14 +98,13 @@ function parseCommand(err, argv){
 
 
   var run = null;
-  if(cwd.includes('Storage')){
+  commands.forEach(function(cmd){
+    if(command.match(cmd.match)){
+      run = cmd.fnc;
+    }   
+  });
+  if(!run && cwd.includes('Storage')){
     run = runCommand;
-  }else{
-    commands.forEach(function(cmd){
-      if(command.match(cmd.match)){
-        run = cmd.fnc;
-      }   
-    });
   }
   if(!run){
     helpCommand();
