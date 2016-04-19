@@ -1,4 +1,5 @@
 var riffle = require('jsriffle');
+var registrar = require('./login.js');
 var prompt = require('prompt');
 var schema = {
   properties: {
@@ -47,7 +48,7 @@ function getToken(err, result){
 
 
 
-  xs.login(result).then(join, error.bind({call: "login"}));
+  registrar.login.bind(xs)(result).then(join, error.bind({call: "login"}));
 
   function onJoin(){
     console.log('joined');
@@ -71,7 +72,6 @@ function getToken(err, result){
   }
 
   function join(user){
-    console.log(user);
     user.onJoin = onJoin.bind(user);
     user.join();
   }
