@@ -220,11 +220,20 @@ function regCommand(command, conn, options){
     }
     var p = undefined;
     var pre = "return ";
-    command = command.replace(/\);?$/g, ', print);');
     try {
+      var args = command.split(',');
+      if(!args || !args[1] || !args[1].includes('func')){
+        console.log("Reg/Subs must use keyword ".error, "func".info, "as handler.".error);
+        if(command.includes('subscribe')){
+          cmdHelp('subscribe');
+        }else{
+          cmdHelp('register');
+        }
+        return getCommand();
+      }
       var type = command.includes('subscribe') ? "Publish" : "Call";
       var name = conn.getName() + '/' + command.match(/\([\'\"]([a-zA-Z0-9]+)[\'\"]/)[1];
-      var print = function(){
+      var func = function(){
         console.log('\n******************************\n* Recieved '.warn, type.warn, " on ".warn, name.help, "\n* Results:\n".warn);
         for(var arg in arguments){
           console.log('* '.warn, arg.data, ': '.data, arguments[arg]);
@@ -232,10 +241,10 @@ function regCommand(command, conn, options){
         console.log('******************************'.warn);
       };
       if(handlers.subRegHandler){
-        print = handlers.subRegHandler;
+        func = handlers.subRegHandler;
       }
-      var fnc = new Function('xs', 'print', pre + command);
-      p = fnc.call({}, conn, print);
+      var fnc = new Function('xs', 'func','riffle', pre + command);
+      p = fnc.call({}, conn, func, riffle);
     } catch (e) {
       console.log("Error: ".error, e.message.error);
       getCommand();
@@ -304,9 +313,9 @@ function helpCommand(command){
     help += "Note: The 'xs' variable is your current working domain or Appliance API\n\t"
     help += "xs.call(...) - make a call  using the cwd.\n\t"
     help += "xs.publish(...) - make a publish  using the cwd.\n\t"
-    help += "xs.register(endpoint) - register to recieve calls using the cwd.\n\t"
+    help += "xs.register('endpoint', func) - **Must use keyword func** register to recieve calls using the cwd.\n\t"
     help += "xs.unregister(endpoint) - unregister a call on the cwd.\n\t"
-    help += "xs.subscribe(channel) - subscribe to a channel using the cwd.\n\t"
+    help += "xs.subscribe('channel', func) - **Must use keyword func** subscribe to a channel using the cwd.\n\t"
     help += "xs.unsubscribe(channel) - unsubscribe from a channel using the cwd.\n\t"
     help += "clear | c - clear screen.\n\t"
     help += "save - save the current logged in token and domain as a profile.\n\t"
@@ -325,8 +334,8 @@ flagOptions["-e"] += "\t\t\t\tExample: xs.call(...); -e logger.Errors\n";
 flagOptions["-h"] = "\t\t\t-h module.successHandler - specify a successHandler from a previsously imported module.\n";
 flagOptions["-h"] += "\t\t\t\tExample: xs.call(...); -h logger.Results\n";
 
-flagOptions["--func"] = "\t\t\t--func module.regSubHandler - specify a handler for call or publishes received by this reg/sub from a previsously imported module.\n";
-flagOptions["--func"] += "\t\t\t\tExample: xs.register('hello'); --func logger.helloHandler\n";
+flagOptions["--func"] = "\t\t\t--func module.regSubHandler - specify a custom handler to replace the default func from a previsously imported module.\n";
+flagOptions["--func"] += "\t\t\t\tExample: xs.register('hello', func); --func logger.helloHandler\n";
 
 var detailHelps = {};
 detailCommands.forEach(function(val){
@@ -359,16 +368,18 @@ detailHelps.publish += flagOptions['-e'];
 detailHelps.publish += "\n\t\tExamples:\n";
 detailHelps.publish += "\t\t\txs.publish('listeners', 'Hello World');\n";
 
-detailHelps.register += "\nUsage: xs.register('ep'); --options (flags)\n";
+detailHelps.register += "\nUsage: xs.register('ep', func); --options (flags)\n";
 detailHelps.register += "\tDescription: Register for calls on and endpoint. By default \n";
-detailHelps.register += "\treceived calls will be logged to console. Use --options to \n";
+detailHelps.register += "\tthe func handler will log to console. Use --options to \n";
 detailHelps.register += "customize behavior.\n";
+detailHelps.register += "\tNote: The keyword func is require to always be the handler.\n";
 detailHelps.register += "\t\t--options flags:\n";
 detailHelps.register += flagOptions['-h'];
 detailHelps.register += flagOptions['-e'];
 detailHelps.register += flagOptions['--func'];
 detailHelps.register += "\n\t\tExamples:\n";
-detailHelps.register += "\t\t\txs.register('callMe');\n";
+detailHelps.register += "\t\t\txs.register('callMe', func);\n";
+detailHelps.register += "\t\t\txs.register('callMeWithString', riffle.want(func, String));\n";
 
 detailHelps.unregister += "\nUsage: xs.unregister('ep'); --options (flags)\n";
 detailHelps.unregister += "\tDescription: Unregister an endpoint on the current domain.\n";
@@ -378,16 +389,17 @@ detailHelps.unregister += flagOptions['-e'];
 detailHelps.unregister += "\n\t\tExamples:\n";
 detailHelps.unregister += "\t\t\txs.unregister('callMe');\n";
 
-detailHelps.subscribe += "\nUsage: xs.subscribe('channel'); --options (flags)\n";
-detailHelps.subscribe += "\tDescription: Subscribe to a channel on this domain. By default\n";
-detailHelps.subscribe += "\treceived publishes will be logged to console. Use --options to \n";
-detailHelps.subscribe += "customize behavior.\n";
+detailHelps.subscribe += "\nUsage: xs.subscribe('channel', func); --options (flags)\n";
+detailHelps.subscribe += "\tDescription: Subscribe to a channel on this domain. By default the func handler\n";
+detailHelps.subscribe += "\twill be log to console. Use --options to customize behavior.\n";
 detailHelps.subscribe += "\t\t--options flags:\n";
+detailHelps.subscribe += "\tNote: The keyword func is require to always be the handler.\n";
 detailHelps.subscribe += flagOptions['-h'];
 detailHelps.subscribe += flagOptions['-e'];
 detailHelps.subscribe += flagOptions['--func'];
 detailHelps.subscribe += "\n\t\tExamples:\n";
-detailHelps.subscribe += "\t\t\txs.subscribe('publishToMe');\n";
+detailHelps.subscribe += "\t\t\txs.subscribe('publishToMe', func);\n";
+detailHelps.register += "\t\t\txs.subscribe('publishToMeWithString', riffle.want(func, String));\n";
 
 detailHelps.unsubscribe += "\nUsage: xs.unsubscribe('channel'); --options (flags)\n";
 detailHelps.unsubscribe += "\tDescription: Unsubscribe from a channel on the current domain.\n";
