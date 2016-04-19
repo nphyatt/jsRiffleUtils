@@ -198,14 +198,15 @@ function regCommand(command, conn){
 }
 
 function helpCommand(){
-  var help = "Usage: \n\thelp - (show this dialogue)\n\tuse -d domain - (switch working domain to domain)\n\t";
-  help += "use -s domain -c collection - (switch working domanin to collection api for storage appliance with domain)\n\t"
+  var help = "Usage: \n\thelp - (show this dialogue)\n\tuse -d domain - (switch working domain)\n\t";
+  help += "use -s domain -c collection - (switch working domain to collection api for storage appliance with domain)\n\t"
+  help += "Note: The 'xs' variable is your current working domain or Appliance API\n\t"
   help += "xs.call(...) - (make a call  using the cwd)\n\t"
   help += "xs.publish(...) - (make a publish  using the cwd)\n\t"
   help += "xs.register(endpoint) - (register to recieve calls using the cwd)\n\t"
+  help += "xs.unregister(endpoint) - (unregister a call on the cwd)\n\t"
   help += "xs.subscribe(channel) - (subscribe to a channel using the cwd)\n\t"
   help += "xs.unsubscribe(channel) - (unsubscribe from a channel using the cwd)\n\t"
-  help += "xs.unregister(channel) - (unregister a call on the cwd)\n\t"
   help += "clear/c - (clear screen)\n\t"
   help += "exit - (exit)\n\t"
   console.log(help);
