@@ -51,7 +51,6 @@ function getToken(err, result){
   registrar.login.bind(xs)(result).then(join, error.bind({call: "login"}));
 
   function onJoin(){
-    console.log('joined');
     auth.call('gen_custom_token', token_name, domain).then(genSuccess, error.bind({call: "gen_custom_token"}));
   }
 
@@ -60,15 +59,18 @@ function getToken(err, result){
       auth.call('get_custom_token', token_name, domain).then(getSuccess, error.bind({call: "get_custom_token"}));
     }else{
       console.log("failure to gen token");
+      process.exit(1);
     }
   }
 
   function getSuccess(token){
     console.log(token);
+    process.exit();
   }
 
   function error(error){
     console.log(this.call, ' : ', error);
+    process.exit(1);
   }
 
   function join(user){
