@@ -47,7 +47,6 @@ var domainSchema = {
 
 var conn = undefined;
 var args = parseArgv(process.argv.slice(2));
-console.log(args);
 if(args.help){
   showHelp();
   process.exit();
