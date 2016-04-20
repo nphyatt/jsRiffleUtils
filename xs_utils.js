@@ -180,19 +180,29 @@ function saveToFile(path, data){
 exp.saveToFile = saveToFile;
 
 function loadFromProfile(domain){
-  var token = null;
-  try{
-    token = fs.readFileSync('./.xs_profiles/'+ domain, 'utf8');
-  }catch(e){
-    console.log("Error: ".error, e.message.error);
-    return false;
-  }
   console.log("Attempting to Join as ".info, domain.info );
   var user = riffle.Domain(domain);
+  var token = readFromFile('./.xs_profiles/'+ domain);
+  if(!token){
+    return false;
+  }
   user.setToken(token);
   return user;
 }
 exp.loadFromProfile = loadFromProfile;
+
+function readFromFile(path){
+  var data = null;
+  try{
+    data = fs.readFileSync(path, 'utf8');
+  }catch(e){
+    console.log("Error: ".error, e.message.error);
+    return false;
+  }
+  return data;
+}
+ 
+exp.readFromFile = readFromFile;
 
 function mkdir(dir){
   try{

@@ -34,6 +34,8 @@ var connections = {};
 var storages = {};
 var cwd = undefined;
 var topConn = undefined;
+var runningScript = false;
+var script = null;
 
 var argvs = parseArgv(process.argv.slice(2));
 if(argvs.help){
@@ -45,10 +47,57 @@ utils.determineLoginMethod(process.argv, join)
 
 function join(user){
   topConn = user;
-  useCommand('use -d ' + user.getName(), user);
+  if(argvs.script){
+    runScript(argvs.script, exitCommand);
+  }else{
+    useCommand('use -d ' + user.getName(), user);
+  }
+}
+
+function runScript(path, cb){
+  runningScript = cb;
+  script = utils.readFromFile(path);
+  if(!script){
+    return finishRunning();
+  }else{
+    try{
+      script = script.split('\n');
+    }catch(e){
+      console.log(e.message.error);
+      return finishRunning();
+    }
+  }
+  cwd = topConn.getName();
+  if(!connections[cwd]){
+    connections[cwd] = topConn.linkDomain(cwd);
+  }
+  continueRunning();
+}
+
+function continueRunning(){
+  var cmd = {$: null};
+  if(script.length > 0){
+    cmd.$ = script.shift();
+    cmd.$.replace(/\/\/.*$/g, '');
+    if(cmd.$ === '' || cmd.$.match(/^\/\//)){
+      return continueRunning();
+    }
+    return parseCommand(null, cmd);
+  }else{
+    return finishRunning();
+  }
+}
+
+function finishRunning(){
+  var finish = runningScript;
+  runningScript = null;
+  finish();
 }
 
 function getCommand(){
+  if(runningScript){
+    return continueRunning();
+  }
   cli.properties.$.description = '(' + cwd + ')$';
   prompt.get(cli, parseCommand);
 }
@@ -87,8 +136,17 @@ function parseCommand(err, argv){
 }
 
 function exitCommand(){
-  console.log('Goodbye'.silly);
-  process.exit();
+  topConn.onLeave = function(){ 
+    console.log('Goodbye'.silly);
+    process.exit();
+  }
+  topConn.leave();
+  setTimeout(badClose, 4000);
+  function badClose(){
+    console.log('Connection didn\'t close properly.'.warn);
+    console.log('Goodbye'.silly);
+    process.exit(1);
+  }
 }
 
 function useCommand(command, conn){
