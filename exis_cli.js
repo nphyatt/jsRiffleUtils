@@ -15,6 +15,7 @@ var cli = {
 
 var commands = [
     {match: /^c$/, fnc: clearCommand },
+    {match: /^script /, fnc: scriptCommand },
     {match: /^clear$/, fnc: clearCommand },
     {match: /^help /, fnc: helpCommand },
     {match: /^import /, fnc: importCommand },
@@ -51,6 +52,16 @@ function join(user){
     runScript(argvs.script, exitCommand);
   }else{
     useCommand('use -d ' + user.getName(), user);
+  }
+}
+
+function scriptCommand(command, conn){
+  var argv = parseArgv(command.replace(/\s/g, ' ').trim().split(' ').slice(1));
+  if(! argv.f){
+    console.log("Missing -f flag.".error);
+    return helpCommand();
+  }else{
+    return runScript(argv.f, getCommand);
   }
 }
 
@@ -378,6 +389,8 @@ function helpCommand(command){
     help += "clear | c - clear screen.\n\t"
     help += "save - save the current logged in token and domain as a profile.\n\t"
     help += "import -f /path/to/file -n name - Import a node module at path and store under name.\n\t"
+    help += "script -f /path/to/file - Run a script of instructions from a file.\n\t\t"
+    help += "Valid commands are seperated by newlines. and // indicate a comment.\n\t"
     help += "exit - exit cli.\n\t"
     console.log(help.help);
   }
@@ -501,6 +514,8 @@ function showHelp(){
 
   var help = "Usage: node exis_cli.js (-flags)\n";
   help += utils.helpFlags();
+  help += "\t\t--script /path/to/file - Run a script of instructions from a file.\n";
+  help += "\t\t\tValid commands are seperated by newlines and // indicate a comment.";
   console.log(desc.data, help.help);
 }
 
