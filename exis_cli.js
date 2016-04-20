@@ -2,16 +2,21 @@ var utils = require('./xs_utils.js');
 var riffle = utils.getRiffle();
 var colors = utils.getColorProfile();
 var parseArgv = utils.getArgv();
-var prompt = utils.getPrompt();
 
+var readline = require('readline');
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
-var cli = {
-  properties: {
-    "$": { 
-      type: 'string'
-    }
-  }
+function prompt(cwd){
+ rl.setPrompt("(".data +cwd.data +")$".data);
+ rl.prompt(true)
 }
+
+rl.on('line', function(input){
+  parseCommand(null, input);
+});
 
 var commands = [
     {match: /^c$/, fnc: clearCommand },
@@ -86,11 +91,11 @@ function runScript(path, cb){
 }
 
 function continueRunning(){
-  var cmd = {$: null};
+  var cmd =  null;
   if(script.length > 0){
-    cmd.$ = script.shift();
-    cmd.$.replace(/\/\/.*$/g, '');
-    if(cmd.$ === '' || cmd.$.match(/^\/\//)){
+    cmd = script.shift();
+    cmd.replace(/\/\/.*$/g, '');
+    if(cmd === '' || cmd.match(/^\/\//)){
       return continueRunning();
     }
     return parseCommand(null, cmd);
@@ -109,18 +114,17 @@ function getCommand(){
   if(runningScript){
     return continueRunning();
   }
-  cli.properties.$.description = '(' + cwd + ')$';
-  prompt.get(cli, parseCommand);
+  prompt(cwd);
 }
 
-function parseCommand(err, argv){
+function parseCommand(err, cmd){
 
   if(err){
     throw err;
     process.exit(1);
   }
 
-  var command = argv.$.split('--options');
+  var command = cmd.split('--options');
   var args = null;
   if(command[1]){
    args = parseArgv(command[1].replace(/\s/g, ' ').trim().split(' '));
