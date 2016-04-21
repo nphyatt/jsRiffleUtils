@@ -15,24 +15,34 @@ function prompt(cwd){
 }
 
 rl.on('line', function(input){
-  parseCommand(null, input);
+  if(logInterval){
+    stopLogs();
+  }else{
+    parseCommand(null, input);
+  }
+});
+
+rl.on('SIGINT', () => {
+  console.log('');
+  process.exit();
 });
 
 var commands = [
-    {match: /^c$/, fnc: clearCommand },
-    {match: /^script /, fnc: scriptCommand },
-    {match: /^clear$/, fnc: clearCommand },
-    {match: /^help /, fnc: helpCommand },
-    {match: /^import /, fnc: importCommand },
-    {match: /^save$/, fnc: saveCommand },
-    {match: /^use /, fnc: useCommand },
-    {match: /^exit$/, fnc: exitCommand },
-    {match: /^xs\.register/, fnc: regCommand },
-    {match: /^xs\.subscribe/, fnc: regCommand },
-    {match: /^xs\.call/, fnc: runCommand },
-    {match: /^xs\.publish/, fnc: runCommand },
-    {match: /^xs\.unregister/, fnc: runCommand },
-    {match: /^xs\.unsubscribe/, fnc: runCommand },
+    {match: /^\s*c\s*$/, fnc: clearCommand },
+    {match: /^\s*script\s+/, fnc: scriptCommand },
+    {match: /^\s*logs\s*$/, fnc: logsCommand },
+    {match: /^\s*clear\s*$/, fnc: clearCommand },
+    {match: /^\s*help\s+/, fnc: helpCommand },
+    {match: /^\s*import\s+/, fnc: importCommand },
+    {match: /^\s*save\s*$/, fnc: saveCommand },
+    {match: /^\s*use\s+/, fnc: useCommand },
+    {match: /^\s*exit\s*$/, fnc: exitCommand },
+    {match: /^\s*xs\.register/, fnc: regCommand },
+    {match: /^\s*xs\.subscribe/, fnc: regCommand },
+    {match: /^\s*xs\.call/, fnc: runCommand },
+    {match: /^\s*xs\.publish/, fnc: runCommand },
+    {match: /^\s*xs\.unregister/, fnc: runCommand },
+    {match: /^\s*xs\.unsubscribe/, fnc: runCommand },
     ];
 
 var imports = {};
@@ -528,6 +538,58 @@ function saveCommand(){
   var token = topConn.getToken();
   utils.saveProfile(domain, token);
   getCommand();
+}
+
+var logger = null;
+var logInterval = null;
+var lastLog = 0;
+function logsCommand(command){
+    if(!logger){
+      logger = topConn.linkDomain('xs.demo.NodeLogger');
+    }
+    lastLog = 0;
+    logInterval = setInterval(fetchLogsLoop, 300);
+}
+
+function gotLogsLoop(logs){
+  readline.clearLine(process.stdout);
+  readline.cursorTo(process.stdout,0);
+  while(logs.length > 0){
+    var l = logs.pop();
+    if(l.time > lastLog){
+      lastLog = l.time;
+      printLog(l);
+    }
+  }
+ rl.setPrompt("(Press enter to quit)".data);
+ rl.prompt(true)
+}
+
+function fetchLogsLoop(){
+  var options = {limit: 30}
+  if(lastLog > 0){
+    options.startts = lastLog;
+  }
+  logger.call('getMessages', cwd, options).then(gotLogsLoop, logErr);
+}
+
+function logErr(err){
+  console.log("Couldn't fetch logs: ".error, err.error);
+  stopLogs();
+}
+
+function printLog(l){
+  if(l.error !== ''){
+    console.log("[".data, (new Date(l.time * 1000)).toLocaleString().data, "]".data.bold, (l.response + ": " +l.error + " Agent: " + l.agent.bold + "[" + l.type + "]" + " => " + l.endpoint).error);
+  }else{
+    console.log("[".data, (new Date(l.time * 1000)).toLocaleString().data, "]".data.bold, ("Agent: " + l.agent.bold + "[" + l.type + "]" + " => " + l.endpoint).info);
+  }
+}
+
+function stopLogs(){
+  clearInterval(logInterval);
+  logInterval = null;
+  setTimeout(getCommand,350);
 }
 
 function clearCommand(){
