@@ -4,28 +4,32 @@ var colors = utils.getColorProfile();
 var parseArgv = utils.getArgv();
 
 var readline = require('readline');
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
+var rl = null;
 
 function prompt(cwd){
  rl.setPrompt("(".data +cwd.data +")$".data);
  rl.prompt(true)
 }
 
-rl.on('line', function(input){
-  if(logInterval){
-    stopLogs();
-  }else{
-    parseCommand(null, input);
-  }
-});
+function setupRL(){
+  rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
 
-rl.on('SIGINT', () => {
-  console.log('');
-  process.exit();
-});
+  rl.on('line', function(input){
+    if(logInterval){
+      stopLogs();
+    }else{
+      parseCommand(null, input);
+    }
+  });
+
+  rl.on('SIGINT', () => {
+    console.log('');
+    process.exit();
+  });
+}
 
 var commands = [
     {match: /^\s*c\s*$/, fnc: clearCommand },
@@ -66,6 +70,7 @@ function join(user){
   if(argvs.script){
     runScript(argvs.script, exitCommand);
   }else{
+    setupRL();
     useCommand('use -d ' + user.getName(), user);
   }
 }

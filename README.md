@@ -18,6 +18,24 @@ Option Flags:
  * --script /path/to/file - Run a script of instructions from a file. Use // to denote comments.
 
 Commands:
+ * help - show help dialogue.
+ * help storage - show dialogue detailing storage API and options.
+ * help [command] - show detailed help dialogues for any specified commands.
+ * use -d domain - switch working domain.
+ * use -s domain -c collection - switch working domain to xsCollection API for Storage Appliance with domain.
+ **Note:** The 'xs' variable is your current working domain or Appliance API
+ * xs.call('ep', ...args); - make a call  using the cwd.
+ * xs.publish('channel', ...args) - make a publish  using the cwd.
+ * xs.register('ep', func) - **Must use keyword func** register to recieve calls using the cwd.
+ * xs.unregister('ep') - unregister a call on the cwd.
+ * xs.subscribe('channel', func) - **Must use keyword func** subscribe to a channel using the cwd.
+ * xs.unsubscribe('channel') - unsubscribe from a channel using the cwd.
+ * clear | c - clear screen.
+ * save - save the current logged in token and domain as a profile to be used later for authentication with -p.
+ * logs - follow the logs for the current working domain.
+ * import -f /path/to/file -n name - Import a node module at path and store under name.
+ * script -f /path/to/file - Run a script of instructions from a file. Use // to denote comments.
+ * exit - exit CLI Tool.
 
 ### Token Getter
 
