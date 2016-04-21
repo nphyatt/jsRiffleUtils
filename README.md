@@ -2,33 +2,35 @@
 
 ## A set of tools that can be used to do helpful things with Exis that I build as I need them.
 
-1. [Token Getter](#Token Getter)
 2. [Exis CLI Tool](#Exis CLI Tool)
-
-### Token Getter
-
-> Retrieve a token for a particular domain that you can use to join the fabric with. Tokens are good for 60 days.
-
-```
-//follow prompt
-node token_getter.js
-```
+1. [Token Getter](#Token Getter)
 
 ### Exis CLI TOOL
 
 > Login with your Exis Developer Credentials to open a connection and than use riffle commands from cli
 
-```
-//login with username and password
-node exis_cli.js
+Usage: `node exis_cli.js`
 
-//use enviroment variables EXIS_DOMAIN and EXIS_TOKEN as credentials
-node exis_cli.js -e
+Option Flags:
+ * -- help - Show help dialogue
+ * -e - Authenticate using environment variables EXIS_DOMAIN and EXIS_TOKEN.
+ * -p domain - Authenticate using previously stored domain profile.
+ * --script /path/to/file - Run a script of instructions from a file. Use // to denote comments.
 
-//use a saved profile as credentials
-node exis_cli.js -p domain
+Commands:
 
-//help dialoge
-node exis_cli.js --help
+### Token Getter
 
-```
+> Retrieve a token for a particular domain that you can use to join the fabric with. Tokens are good for 60 days.
+
+Usage: `node token_getter.js`
+
+Option Flags:
+ * -- help - Show help dialogue
+ * -e - Authenticate using environment variables EXIS_DOMAIN and EXIS_TOKEN.
+ * -p domain - Authenticate using previously stored domain profile.
+ * -d - Delete the token from the specified Auth Appliance.
+ * -l - List the tokens belonging to a domain from the specified Auth Appliance.
+ * -s - Save the token as a profile that you can use for later authentication with the -p flag.
+ * -f /path/to/file - Save the token to the specified file.
+
