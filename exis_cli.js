@@ -402,6 +402,7 @@ function helpCommand(command){
     help += "xs.unsubscribe(channel) - unsubscribe from a channel using the cwd.\n\t"
     help += "clear | c - clear screen.\n\t"
     help += "save - save the current logged in token and domain as a profile.\n\t"
+    help += "logs - follow the logs for the current working domain.\n\t"
     help += "import -f /path/to/file -n name - Import a node module at path and store under name.\n\t"
     help += "script -f /path/to/file - Run a script of instructions from a file.\n\t\t"
     help += "Valid commands are seperated by newlines. and // indicate a comment.\n\t"
