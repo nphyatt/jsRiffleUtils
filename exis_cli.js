@@ -34,7 +34,9 @@ function setupRL(){
 
 var commands = [
     {match: /^\s*c\s*$/, fnc: clearCommand },
+    {match: /^\s*ls\s*$/, fnc: lsCommand },
     {match: /^\s*script\s+/, fnc: scriptCommand },
+    {match: /^\s*alias\s+/, fnc: aliasCommand },
     {match: /^\s*logs\s*$/, fnc: logsCommand },
     {match: /^\s*clear\s*$/, fnc: clearCommand },
     {match: /^\s*help\s+/, fnc: helpCommand },
@@ -52,6 +54,7 @@ var commands = [
 
 var imports = {};
 var connections = {};
+var aliases = {};
 var storages = {};
 var cwd = undefined;
 var topConn = undefined;
@@ -141,11 +144,19 @@ function parseCommand(err, cmd){
     process.exit(1);
   }
 
+  var aliasCmd = null;
   var command = cmd.match(/(.*\);)(.*)/);
   var args = null;
   if(command){
     args = parseArgv(command[2].replace(/\s/g, ' ').trim().split(' '));
     command = command[1].trim();
+    var alias = command.match(/\s*(.*?)\./);
+    if(alias){
+      var a = alias[1];
+      if(aliases[a]){
+        aliasCmd = { a: aliases[a], name: a};
+      }
+    }
   }else{
     command = cmd;
   }
@@ -155,13 +166,22 @@ function parseCommand(err, cmd){
   commands.forEach(function(cmd){
     if(command.match(cmd.match)){
       run = cmd.fnc;
-    }   
+    }else if(aliasCmd){
+        if(command.replace(a, 'xs').match(cmd.match)){
+          run = cmd.fnc;
+        }
+    }
   });
   if(!run){
     var appl = ['Auth', 'Bouncer', 'Container', 'Replay', 'Storage'];
     appl.forEach(function(name){
       if(cwd.includes(name)){
         run = runCommand;
+      }
+      if(aliasCmd){
+        if(aliasCmd.a.desc.includes(name)){
+          run = runCommand;
+        }
       }
     });
   }
@@ -170,7 +190,12 @@ function parseCommand(err, cmd){
     return;
   }
 
-  run(command, connections[cwd], args)
+  //check if using an alias
+  if(aliasCmd){
+    run(command, aliasCmd.a.conn, args, aliasCmd.name);
+  }else{
+    run(command, connections[cwd], args)
+  }
   
 }
 
@@ -233,7 +258,24 @@ function useCommand(command, conn){
   getCommand();
 }
 
-function runCommand(command, conn, options){
+function aliasCommand(command, conn){
+  var command = command.replace(/\s+/g, ' ').trim().split(' ').slice(1);
+  var argv = parseArgv(command); 
+  var alias = utils.argPair(argv.n, argv.name, 'string');
+  if(alias){
+    if(alias === 'xs'){
+      console.log("You can't overwrite the xs variable.".warn);
+    }else{
+      aliases[alias] = {desc: cwd, conn: connections[cwd]};
+    }
+  }else{
+    cmdHelp('alias');
+  }
+  getCommand();
+}
+
+function runCommand(command, conn, options, conName){
+    conName = conName || 'xs';
     var handlers = {success: null, error: null};
     if(options){
       if(options.h = utils.argPair(options.h, options.handler, 'string')){
@@ -252,7 +294,7 @@ function runCommand(command, conn, options){
     var p = undefined;
     var pre = "return ";
     try {
-      var fnc = new Function('xs', pre + command);
+      var fnc = new Function(conName, pre + command);
       p = fnc.call({}, conn);
     } catch (e) {
       console.log("Error: ".error, e.message.error);
@@ -312,7 +354,8 @@ function fetchHandler(module){
   return handler;
 }
 
-function regCommand(command, conn, options){
+function regCommand(command, conn, options, conName){
+    conName = conName || 'xs';
     var handlers = {success: null, error: null, subRegHandler: null};
     if(options){
       if(options.h = utils.argPair(options.h, options.handler, 'string')){
@@ -355,7 +398,7 @@ function regCommand(command, conn, options){
       if(handlers.subRegHandler){
         func = handlers.subRegHandler;
       }
-      var fnc = new Function('xs', 'func','riffle', pre + command);
+      var fnc = new Function(conName, 'func','riffle', pre + command);
       p = fnc.call({}, conn, func, riffle);
     } catch (e) {
       console.log("Error: ".error, e.message.error);
@@ -407,16 +450,17 @@ function importCommand(command){
 }
 
 var detailCommands = [
-    'use',
+    'alias',
     'call',
+    'import',
     'publish',
     'register',
-    'unregister',
-    'subscribe',
-    'unsubscribe',
     'save',
-    'import',
-    'storage'
+    'storage',
+    'subscribe',
+    'unregister',
+    'unsubscribe',
+    'use'
 ];
 function helpCommand(command){
   if(command){
@@ -508,5 +552,12 @@ function stopLogs(){
 
 function clearCommand(){
   exec('clear');
+  getCommand();
+}
+
+function lsCommand(){
+  for(var a in aliases){
+    console.log(a.data, ' : ', aliases[a].desc);
+  }
   getCommand();
 }

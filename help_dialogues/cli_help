@@ -9,17 +9,19 @@ Notes:
 Commands: 
     help - show this dialogue
     help [command] - show detailed help dialogue for a command if it exists
-    use  [options] - switch the current working domain or use an Appliance API
-    xs.call('ep',...args); [options] - make a call  using the cwd
-    xs.publish('channel',...args); [options] - make a publish  using the cwd
-    xs.register('endpoint', func); [options] - register to recieve calls using the cwd
-    xs.unregister('endpoint'); [options] - unregister a call on the cwd
-    xs.subscribe('channel', func); [options] - subscribe to a channel using the cwd
-    xs.unsubscribe('channel'); [options] - unsubscribe from a channel using the cwd
+    [domain].call('ep',...args); [options] - make a call  using the cwd
+    [domain].publish('channel',...args); [options] - make a publish  using the cwd
+    [domain].register('endpoint', func); [options] - register to recieve calls using the cwd
+    [domain].unregister('endpoint'); [options] - unregister a call on the cwd
+    [domain].subscribe('channel', func); [options] - subscribe to a channel using the cwd
+    [domain].unsubscribe('channel'); [options] - unsubscribe from a channel using the cwd
+    alias -n, --name [name] - give an alias to the cwd so you can access it from any cwd
     c, clear - clear screen
-    save -n, --name [name] - save the current logged in token and domain to the named profile
-    logs - follow the logs for the current working domain
     import -f, --file [/path/to/file] -n, --name [name] - import a node module at [path] and store under [name]
+    logs - follow the logs for the current working domain
+    ls - show information about your current aliases.
+    save -n, --name [name] - save the current logged in token and domain to the named profile
     script -f, --file [/path/to/file] - run a script of instructions from a file valid commands are 
                                 seperated by newlines and // indicate a comment.
+    use  [options] - switch the current working domain or use an Appliance API
     exit - exit cli

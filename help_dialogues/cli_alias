@@ -1,0 +1,12 @@
+
+Save the Domain or Appliance API you're currently working under
+to an alias so you can use it from any interface.
+
+Note: The [-n, --name] flag is required.
+
+Usage: alias -n, --name [name]
+
+Examples:
+
+    alias -n home
+    home.call('callingHome', 5555555);
