@@ -3,7 +3,7 @@ xs.call('hey', 44);
 xs.call('hey', "test");
 xs.unregister('hey');
 use -d xs.demo.nick2.swindler
-import -f ./example_module.js -n h
+import -f ./imports/module.js -n h
 
 //register with a want and a custom handler
 xs.register('hey', riffle.want(func, String)); --options --func h.successHandler

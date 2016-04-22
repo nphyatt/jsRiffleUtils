@@ -63,8 +63,8 @@ function join(user){
  }else if(utils.argPair(args.l, args.list, 'boolean')){
   prompt.get(domainSchema, listTokens);
  }else{
-  if(utils.argPair(args.s, args.save, 'boolean')){
-    profileSave = true
+  if(args.s = utils.argPair(args.s, args.save, 'string')){
+    profileSave = args.s;
   }
   saveFile = utils.argPair(args.f, args.file, 'string');
   prompt.get(tokenSchema, getToken.bind({}, false));
@@ -118,7 +118,7 @@ function getToken(deleteToken, err, result){
         utils.saveToFile(saveFile, token);
       }
       if(profileSave){
-        utils.saveProfile(domain, token, name);
+        utils.saveProfile(domain, token, profileSave);
       }
     }
     process.exit();
