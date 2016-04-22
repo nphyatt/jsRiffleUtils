@@ -3,6 +3,8 @@ var riffle = utils.getRiffle();
 var colors = utils.getColorProfile();
 var parseArgv = utils.getArgv();
 
+var pjson = require('prettyjson');
+
 var readline = require('readline');
 var rl = null;
 
@@ -153,8 +155,13 @@ function parseCommand(err, cmd){
       run = cmd.fnc;
     }   
   });
-  if(!run && cwd.includes('Storage')){
-    run = runCommand;
+  if(!run){
+    var appl = ['Auth', 'Bouncer', 'Container', 'Replay', 'Storage'];
+    appl.forEach(function(name){
+      if(cwd.includes(name)){
+        run = runCommand;
+      }
+    });
   }
   if(!run){
     helpCommand();
@@ -181,18 +188,38 @@ function exitCommand(){
 
 function useCommand(command, conn){
   var argv = parseArgv(command.replace(/\s/g, ' ').trim().split(' ').slice(1));
-  if(! argv.s && argv.d){
+  if(! argv.storage && argv.d){
     cwd = argv.d;
     if(!connections[cwd]){
       connections[cwd] = topConn.linkDomain(cwd);
     }
-  }else if( argv.s && argv.c){
-    cwd = 'StorageCollection[' + argv.c + ']' + argv.s;
+  }else if(typeof argv.storage === 'string' && typeof argv.c === 'string'){
+    cwd = 'StorageCollection[' + argv.c + ']' + argv.storage;
     if(!connections[cwd]){
-      if(!storages[argv.s]){
-        storages[argv.s] = riffle.xsStorage(topConn.linkDomain(argv.s));
+      if(!storages[argv.storage]){
+        storages[argv.storage] = riffle.xsStorage(topConn.linkDomain(argv.storage));
       }
-      connections[cwd] = storages[argv.s].xsCollection(argv.c);
+      connections[cwd] = storages[argv.storage].xsCollection(argv.c);
+    }
+  }else if(typeof argv.auth === 'string'){
+    cwd = 'Auth[' + argv.auth + ']';
+    if(!connections[cwd]){
+      connections[cwd] = riffle.xsAuth(topConn.linkDomain(argv.auth));
+    }
+  }else if(argv.bouncer){
+    cwd = 'Bouncer';
+    if(!connections[cwd]){
+      connections[cwd] = riffle.xsBouncer(topConn);
+    }
+  }else if(typeof argv.container === 'string'){
+    cwd = 'Container[' + argv.container + ']';
+    if(!connections[cwd]){
+      connections[cwd] = riffle.xsContainers(topConn.linkDomain(argv.container));
+    }
+  }else if(typeof argv.replay === 'string'){
+    cwd = 'Replay[' + argv.replay + ']';
+    if(!connections[cwd]){
+      connections[cwd] = riffle.xsReplay(topConn.linkDomain(argv.replay));
     }
   }else{
     helpCommand();
@@ -231,11 +258,11 @@ function runCommand(command, conn, options){
     p.then(defaultHandler, defaultErr);
     function defaultHandler(){
       if(!handlers.success){
-        console.log('\n******************************\n* Recieved Response\n* Return:\n'.warn);
+        console.log('\n******************************\n* Recieved Response\n* Return:\n'.help);
         for(var arg in arguments){
-          console.log('* '.warn, 'arg('.data , arg.data, '): '.data, arguments[arg]);
+          console.log('* '.help, 'arg('.help , arg.help, '): \n'.help, pjson.render(arguments[arg],{}));
         }
-        console.log('******************************'.warn);
+        console.log('******************************'.help);
       }else{
         try{
           handlers.success.apply({}, arguments);
@@ -322,11 +349,11 @@ function regCommand(command, conn, options){
       var type = command.includes('subscribe') ? "Publish" : "Call";
       var name = conn.getName() + '/' + command.match(/\([\'\"]([a-zA-Z0-9]+)[\'\"]/)[1];
       var func = function(){
-        console.log('\n******************************\n* Recieved '.warn, type.warn, " on ".warn, name.help, "\n* Results:\n".warn);
+        console.log('\n******************************\n* Recieved '.help, type.help, " on ".help, name.info, "\n* Results:\n".help);
         for(var arg in arguments){
-          console.log('* '.warn, arg.data, ': '.data, arguments[arg]);
+          console.log('* '.help, arg.help, ': \n'.help, pjson.render(arguments[arg],{}));
         }
-        console.log('******************************'.warn);
+        console.log('******************************'.help);
       };
       if(handlers.subRegHandler){
         func = handlers.subRegHandler;
@@ -436,11 +463,15 @@ detailHelps.use += "\nUsage: use (flags)\n";
 detailHelps.use += "\tNote: either -d or -s and -c must be specified. -s and -c must always both be set if one is.\n";
 detailHelps.use += "\t\tFlags:\n";
 detailHelps.use += "\t\t\t-d domain - Switch to the specified working domain. Opertions will be done under working domain.\n";
-detailHelps.use += "\t\t\t-s domain - The domain of the Storage Appliance you wish to interact with.\n";
+detailHelps.use += "\t\t\t--storage domain - The domain of the Storage Appliance you wish to interact with.\n";
 detailHelps.use += "\t\t\t-c collection - The name of the collection in the Storage Appliance you wish to interact with.\n";
+detailHelps.use += "\t\t\t--auth domain - The domain of the Auth Appliance you wish to interact with.\n";
+detailHelps.use += "\t\t\t--bouncer Use the bouncer API.\n";
+detailHelps.use += "\t\t\t--container domain - The domain of the Container Appliance you wish to interact with.\n";
+detailHelps.use += "\t\t\t--replay domain - The domain of the Replay Appliance you wish to interact with.\n";
 detailHelps.use += "\n\t\tExamples:\n";
 detailHelps.use += "\t\t\tuse -d xs.demo.user.app\n";
-detailHelps.use += "\t\t\tuse -s xs.demo.user.app.Storage -c users\n";
+detailHelps.use += "\t\t\tuse --storage xs.demo.user.app.Storage -c users\n";
 
 detailHelps.call += "\nUsage: xs.call('ep',...args); --options (flags)\n";
 detailHelps.call += "\tDescription: Make a call on the fabric using regular riffle syntax with option --options\n";
