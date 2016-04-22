@@ -47,7 +47,7 @@ var domainSchema = {
 
 var conn = undefined;
 var args = parseArgv(process.argv.slice(2));
-if(args.help){
+if(utils.argPair(args.help, args.h, 'boolean')){
   showHelp();
   process.exit();
 }
@@ -58,15 +58,15 @@ var saveFile = undefined;
 var profileSave = false;
 function join(user){
  conn = user;
- if(args.d){
+ if(utils.argPair(args.d, args.delete, 'boolean')){
   prompt.get(tokenSchema, getToken.bind({}, true));
- }else if(args.l){
+ }else if(utils.argPair(args.l, args.list, 'boolean')){
   prompt.get(domainSchema, listTokens);
  }else{
-  if(args.s){
+  if(utils.argPair(args.s, args.save, 'boolean')){
     profileSave = true
   }
-  saveFile = args.f;
+  saveFile = utils.argPair(args.f, args.file, 'string');
   prompt.get(tokenSchema, getToken.bind({}, false));
  }
 }
@@ -118,7 +118,7 @@ function getToken(deleteToken, err, result){
         utils.saveToFile(saveFile, token);
       }
       if(profileSave){
-        utils.saveProfile(domain, token);
+        utils.saveProfile(domain, token, name);
       }
     }
     process.exit();
@@ -149,13 +149,13 @@ function listTokens(err, result){
 
   function listSuccess(resp){
     for(var dom in resp){
-      console.log("******************************".help);
-      console.log("*".help, "Domain: ".data, dom.help);
       for(var token in resp[dom]){
-        console.log("*".help, "\tToken Name: ".data, resp[dom][token].name.help, '\tCreated: '.data, (new Date(resp[dom][token].created *1000)).toLocaleString().help, '\tExpires: '.data, (new Date(resp[dom][token].expires *1000)).toLocaleString().help)
+        var t = resp[dom][token];
+        t.created = (new Date(t.created *1000)).toLocaleString();
+        t.expires = (new Date(t.expires *1000)).toLocaleString();
       }
-      console.log("******************************".help);
     }
+    utils.prettyPrintLoop(resp, 'Tokens', "Domain");
     process.exit();
   }
 
@@ -166,18 +166,5 @@ function listTokens(err, result){
 }
 
 function showHelp(){
-
-  var desc = "\n\nThis module helps with some token management functions. You can\n";
-  desc +=        "easily save delete and list tokens for which you have          \n";
-  desc +=        "permissions saved in the Auth appliance you specify. Retrieved \n";
-  desc +=        "tokens can be saved to file, or to the profiles folder for use \n";
-  desc +=        "in authentication in this and other jsRiffleUtils modules.   \n\n";
-
-  var help = "Usage: node token_getter.js (-flags)\n";
-  help += utils.helpFlags();
-  help += "\t\t-d - Delete the token from the specified Auth Appliance.\n";
-  help += "\t\t-l - List the tokens belonging to the specified domain from the specified Auth Appliance.\n";
-  help += "\t\t-s - Save the token as a profile that you can use for later authentication with the -p flag.\n";
-  help += "\t\t-f /path/to/file - Save the token to the specified file.\n";
-  console.log(desc.data, help.help);
+  console.log(utils.help('token_getter'));
 }

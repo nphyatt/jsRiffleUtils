@@ -1,0 +1,13 @@
+
+Make a call on the fabric using regular riffle syntax.
+
+Usage: xs.call('ep',...args); [options]
+
+Options:
+
+    -h, --handler [import]  - specify a successHandler from a previsously imported module
+    -e, --err [import] - specify a errHandler function from a previsously imported module
+
+Examples: 
+    xs.call('hi'); -e logger.Errors
+    xs.call('hi'); -h logger.Results

@@ -1,0 +1,17 @@
+
+Subscribe to a channel on this domain. By default events recieved will 
+be logged to the console.
+
+Note: The keyword 'func' is required to always be the handler.
+
+Usage: xs.subscribe('channel', func); [options]
+
+Options:
+
+    -h, --handler [import]  - specify a successHandler from a previsously imported module
+    -e, --err [import] - specify a errHandler function from a previsously imported module
+    -f, --func [import] - specify a custom handler to replace the default func from a previsously imported module
+
+Examples: 
+    xs.subscribe('publishToMe', func); -f handler.PubHandler
+    xs.subscribe('publishToMeWithString', riffle.want(func, String));

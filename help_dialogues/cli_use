@@ -1,0 +1,22 @@
+
+Save the current credentials for the connection to a profile for use
+in later authentication with the -p flag..
+
+Note: Either the [-d, --domain] or both [-s, --storage] and [-c, --container]
+must be specified.
+
+Usage: use [options]
+
+Options:
+
+    -d, --domain [domain] - Switch to the specified working domain. Opertions will be done under working domain.
+    -a, --auth [domain] - The domain of the Auth Appliance you wish to interact with.
+    -b, --bouncer - Use the bouncer API.
+    -C, --container [domain] - The domain of the Container Appliance you wish to interact with.
+    -r,--replay [domain] - The domain of the Replay Appliance you wish to interact with.
+    -s, --storage [domain] - The domain of the Storage Appliance you wish to interact with.
+    -c, --collection [collection] - The name of the collection in the Storage Appliance you wish to interact with.
+
+Examples: 
+    use -d xs.demo.user.app
+    use -s xs.demo.user.app.Storage -c users

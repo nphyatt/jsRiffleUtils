@@ -1,0 +1,13 @@
+
+Import a custom node module to be used for handling subscriptions,
+registrations, or results from calls. The specified name will be 
+used to hold the module. If you have an existing module under the
+name it will be overwritten.
+
+Note: Both the [-f, --file] and [-n, --name] flags are required.
+
+Usage: import -f, --file [path/to/file.js] -n, --name [name]
+
+Examples:
+
+    import -f /home/me/handlers.js -n handlers

@@ -1,0 +1,12 @@
+
+Unsubscribe from a channel on the current domain.
+
+Usage: xs.unsubscribe('channel'); [options]
+
+Options:
+
+    -h, --handler [import]  - specify a successHandler from a previsously imported module
+    -e, --err [import] - specify a errHandler function from a previsously imported module
+
+Examples: 
+    xs.unsubscribe('publishToMe');

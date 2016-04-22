@@ -3,7 +3,6 @@ var riffle = utils.getRiffle();
 var colors = utils.getColorProfile();
 var parseArgv = utils.getArgv();
 
-var pjson = require('prettyjson');
 
 var readline = require('readline');
 var rl = null;
@@ -40,7 +39,7 @@ var commands = [
     {match: /^\s*clear\s*$/, fnc: clearCommand },
     {match: /^\s*help\s+/, fnc: helpCommand },
     {match: /^\s*import\s+/, fnc: importCommand },
-    {match: /^\s*save\s*$/, fnc: saveCommand },
+    {match: /^\s*save\s+/, fnc: saveCommand },
     {match: /^\s*use\s+/, fnc: useCommand },
     {match: /^\s*exit\s*$/, fnc: exitCommand },
     {match: /^\s*xs\.register/, fnc: regCommand },
@@ -69,7 +68,8 @@ utils.determineLoginMethod(process.argv, join)
 
 function join(user){
   topConn = user;
-  if(argvs.script){
+  var scrpt = utils.argPair(argvs.s, argvs.script, 'string');
+  if(scrpt){
     runScript(argvs.script, exitCommand);
   }else{
     setupRL();
@@ -78,12 +78,12 @@ function join(user){
 }
 
 function scriptCommand(command, conn){
-  var argv = parseArgv(command.replace(/\s/g, ' ').trim().split(' ').slice(1));
-  if(! argv.f){
+  var argv = parseArgv(command.replace(/\s+/g, ' ').trim().split(' ').slice(1));
+  if(argv.f = utils.argPair(argv.f, argv.file, 'string')){
+    return runScript(argv.f, getCommand);
+  }else{
     console.log("Missing -f flag.".error);
     return helpCommand();
-  }else{
-    return runScript(argv.f, getCommand);
   }
 }
 
@@ -141,12 +141,14 @@ function parseCommand(err, cmd){
     process.exit(1);
   }
 
-  var command = cmd.split('--options');
+  var command = cmd.match(/(.*\);)(.*)/);
   var args = null;
-  if(command[1]){
-   args = parseArgv(command[1].replace(/\s/g, ' ').trim().split(' '));
+  if(command){
+    args = parseArgv(command[2].replace(/\s/g, ' ').trim().split(' '));
+    command = command[1].trim();
+  }else{
+    command = cmd;
   }
-  command = command[0].trim();
 
 
   var run = null;
@@ -187,13 +189,16 @@ function exitCommand(){
 }
 
 function useCommand(command, conn){
-  var argv = parseArgv(command.replace(/\s/g, ' ').trim().split(' ').slice(1));
-  if(! argv.storage && argv.d){
-    cwd = argv.d;
+  var command = command.replace(/\s+/g, ' ').trim().split(' ').slice(1);
+  var argv = parseArgv(command); 
+  if(utils.argPair(argv.d, argv.domain, 'string')){
+    cwd = utils.argPair(argv.d, argv.domain, 'string');
     if(!connections[cwd]){
       connections[cwd] = topConn.linkDomain(cwd);
     }
-  }else if(typeof argv.storage === 'string' && typeof argv.c === 'string'){
+  }else if(utils.argPair(argv.s, argv.storage,'string') && utils.argPair(argv.c, argv.collection,'string')){
+    argv.c = utils.argPair(argv.c, argv.collection,'string');
+    argv.storage = utils.argPair(argv.s, argv.storage,'string');
     cwd = 'StorageCollection[' + argv.c + ']' + argv.storage;
     if(!connections[cwd]){
       if(!storages[argv.storage]){
@@ -201,22 +206,22 @@ function useCommand(command, conn){
       }
       connections[cwd] = storages[argv.storage].xsCollection(argv.c);
     }
-  }else if(typeof argv.auth === 'string'){
+  }else if(argv.auth = utils.argPair(argv.a, argv.auth, 'string')){
     cwd = 'Auth[' + argv.auth + ']';
     if(!connections[cwd]){
       connections[cwd] = riffle.xsAuth(topConn.linkDomain(argv.auth));
     }
-  }else if(argv.bouncer){
+  }else if(utils.argPair(argv.b, argv.bouncer, 'boolean')){
     cwd = 'Bouncer';
     if(!connections[cwd]){
       connections[cwd] = riffle.xsBouncer(topConn);
     }
-  }else if(typeof argv.container === 'string'){
+  }else if(argv.container = utils.argPair(argv.container, argv.C,'string')){
     cwd = 'Container[' + argv.container + ']';
     if(!connections[cwd]){
       connections[cwd] = riffle.xsContainers(topConn.linkDomain(argv.container));
     }
-  }else if(typeof argv.replay === 'string'){
+  }else if(argv.replay = utils.argPair(argv.r, argv.replay,'string')){
     cwd = 'Replay[' + argv.replay + ']';
     if(!connections[cwd]){
       connections[cwd] = riffle.xsReplay(topConn.linkDomain(argv.replay));
@@ -231,13 +236,13 @@ function useCommand(command, conn){
 function runCommand(command, conn, options){
     var handlers = {success: null, error: null};
     if(options){
-      if(options.h){
+      if(options.h = utils.argPair(options.h, options.handler, 'string')){
         handlers.success = fetchHandler(options.h)
         if(!handlers.success){
           return getCommand();
         }
       }    
-      if(options.e){
+      if(options.e = utils.argPair(options.e, options.err, 'string')){
         handlers.error = fetchHandler(options.e)
         if(!handlers.error){
           return getCommand();
@@ -258,11 +263,7 @@ function runCommand(command, conn, options){
     p.then(defaultHandler, defaultErr);
     function defaultHandler(){
       if(!handlers.success){
-        console.log('\n******************************\n* Recieved Response\n* Return:\n'.help);
-        for(var arg in arguments){
-          console.log('* '.help, 'arg('.help , arg.help, '): \n'.help, pjson.render(arguments[arg],{}));
-        }
-        console.log('******************************'.help);
+        utils.prettyPrintLoop(arguments, 'Recieved Response', 'Arg');
       }else{
         try{
           handlers.success.apply({}, arguments);
@@ -314,19 +315,19 @@ function fetchHandler(module){
 function regCommand(command, conn, options){
     var handlers = {success: null, error: null, subRegHandler: null};
     if(options){
-      if(options.h){
+      if(options.h = utils.argPair(options.h, options.handler, 'string')){
         handlers.success = fetchHandler(options.h)
         if(!handlers.success){
           return getCommand();
         }
       }    
-      if(options.e){
+      if(options.e = utils.argPair(options.e, options.err, 'string')){
         handlers.error = fetchHandler(options.e)
         if(!handlers.error){
           return getCommand();
         }
       }    
-      if(options.func){
+      if(options.func = utils.argPair(options.f, options.func, 'string')){
         handlers.subRegHandler = fetchHandler(options.func)
         if(!handlers.subRegHandler){
           return getCommand();
@@ -349,11 +350,7 @@ function regCommand(command, conn, options){
       var type = command.includes('subscribe') ? "Publish" : "Call";
       var name = conn.getName() + '/' + command.match(/\([\'\"]([a-zA-Z0-9]+)[\'\"]/)[1];
       var func = function(){
-        console.log('\n******************************\n* Recieved '.help, type.help, " on ".help, name.info, "\n* Results:\n".help);
-        for(var arg in arguments){
-          console.log('* '.help, arg.help, ': \n'.help, pjson.render(arguments[arg],{}));
-        }
-        console.log('******************************'.help);
+        utils.prettyPrintLoop(arguments, 'Recieved ' + type + " on " + name, 'Result');
       };
       if(handlers.subRegHandler){
         func = handlers.subRegHandler;
@@ -393,7 +390,7 @@ function regCommand(command, conn, options){
 function importCommand(command){
   if(command){
     var args = parseArgv(command.trim().replace(/\s/g, ' ').split(' ')); 
-    if(args.f === '' || !args.f || args.n === '' || !args.n){
+    if(!(args.n = utils.argPair(args.n, args.name, 'string')) || !(args.f = utils.argPair(args.f, args.file, 'string'))){
       cmdHelp('import');
       return getCommand();
     }else{
@@ -409,7 +406,18 @@ function importCommand(command){
   getCommand();
 }
 
-var detailCommands = ['use', 'call', 'publish', 'register', 'unregister', 'subscribe', 'unsubscribe', 'save', 'import', 'storage'];
+var detailCommands = [
+    'use',
+    'call',
+    'publish',
+    'register',
+    'unregister',
+    'subscribe',
+    'unsubscribe',
+    'save',
+    'import',
+    'storage'
+];
 function helpCommand(command){
   if(command){
     var args = parseArgv(command.trim().replace(/\s/g, ' ').split(' ')); 
@@ -419,161 +427,30 @@ function helpCommand(command){
       }
     });
   }else {
-    var help = "Usage: \n\t";
-    help += "help - show this dialogue.\n\t";
-    help += "help storage - show dialogue detailing storage API and options.\n\t";
-    help += "help [command command2...] - show detailed help dialogues for any specified commands.\n\t";
-    help += "use -d domain - switch working domain.\n\t";
-    help += "use -s domain -c collection - switch working domain to collection api for storage appliance with domain.\n\t"
-    help += "Note: The 'xs' variable is your current working domain or Appliance API\n\t"
-    help += "xs.call(...) - make a call  using the cwd.\n\t"
-    help += "xs.publish(...) - make a publish  using the cwd.\n\t"
-    help += "xs.register('endpoint', func) - **Must use keyword func** register to recieve calls using the cwd.\n\t"
-    help += "xs.unregister(endpoint) - unregister a call on the cwd.\n\t"
-    help += "xs.subscribe('channel', func) - **Must use keyword func** subscribe to a channel using the cwd.\n\t"
-    help += "xs.unsubscribe(channel) - unsubscribe from a channel using the cwd.\n\t"
-    help += "clear | c - clear screen.\n\t"
-    help += "save - save the current logged in token and domain as a profile.\n\t"
-    help += "logs - follow the logs for the current working domain.\n\t"
-    help += "import -f /path/to/file -n name - Import a node module at path and store under name.\n\t"
-    help += "script -f /path/to/file - Run a script of instructions from a file.\n\t\t"
-    help += "Valid commands are seperated by newlines. and // indicate a comment.\n\t"
-    help += "exit - exit cli.\n\t"
-    console.log(help.help);
+    console.log(utils.help('cli_help'));
   }
   getCommand();
 }
 
-var flagOptions = {};
-
-flagOptions["-e"] = "\t\t\t-e module.errHandler - specify a errHandler function from a previsously imported module.\n";
-flagOptions["-e"] += "\t\t\t\tExample: xs.call(...); -e logger.Errors\n";
-
-flagOptions["-h"] = "\t\t\t-h module.successHandler - specify a successHandler from a previsously imported module.\n";
-flagOptions["-h"] += "\t\t\t\tExample: xs.call(...); -h logger.Results\n";
-
-flagOptions["--func"] = "\t\t\t--func module.regSubHandler - specify a custom handler to replace the default func from a previsously imported module.\n";
-flagOptions["--func"] += "\t\t\t\tExample: xs.register('hello', func); --func logger.helloHandler\n";
-
-var detailHelps = {};
-detailCommands.forEach(function(val){
-  detailHelps[val] = "";
-});
-detailHelps.use += "\nUsage: use (flags)\n";
-detailHelps.use += "\tNote: either -d or -s and -c must be specified. -s and -c must always both be set if one is.\n";
-detailHelps.use += "\t\tFlags:\n";
-detailHelps.use += "\t\t\t-d domain - Switch to the specified working domain. Opertions will be done under working domain.\n";
-detailHelps.use += "\t\t\t--storage domain - The domain of the Storage Appliance you wish to interact with.\n";
-detailHelps.use += "\t\t\t-c collection - The name of the collection in the Storage Appliance you wish to interact with.\n";
-detailHelps.use += "\t\t\t--auth domain - The domain of the Auth Appliance you wish to interact with.\n";
-detailHelps.use += "\t\t\t--bouncer Use the bouncer API.\n";
-detailHelps.use += "\t\t\t--container domain - The domain of the Container Appliance you wish to interact with.\n";
-detailHelps.use += "\t\t\t--replay domain - The domain of the Replay Appliance you wish to interact with.\n";
-detailHelps.use += "\n\t\tExamples:\n";
-detailHelps.use += "\t\t\tuse -d xs.demo.user.app\n";
-detailHelps.use += "\t\t\tuse --storage xs.demo.user.app.Storage -c users\n";
-
-detailHelps.call += "\nUsage: xs.call('ep',...args); --options (flags)\n";
-detailHelps.call += "\tDescription: Make a call on the fabric using regular riffle syntax with option --options\n";
-detailHelps.call += "\t\t--options flags:\n";
-detailHelps.call += flagOptions['-h'];
-detailHelps.call += flagOptions['-e'];
-detailHelps.call += "\n\t\tExamples:\n";
-detailHelps.call += "\t\t\txs.call('echo', 'Hello World');\n";
-
-detailHelps.publish += "\nUsage: xs.publish('ep',...args); --options (flags)\n";
-detailHelps.publish += "\tDescription: Publish an event on the fabric using regular\n";
-detailHelps.publish += "\triffle syntax with options --options\n";
-detailHelps.publish += "\t\t--options flags:\n";
-detailHelps.publish += flagOptions['-h'];
-detailHelps.publish += flagOptions['-e'];
-detailHelps.publish += "\n\t\tExamples:\n";
-detailHelps.publish += "\t\t\txs.publish('listeners', 'Hello World');\n";
-
-detailHelps.register += "\nUsage: xs.register('ep', func); --options (flags)\n";
-detailHelps.register += "\tDescription: Register for calls on and endpoint. By default \n";
-detailHelps.register += "\tthe func handler will log to console. Use --options to \n";
-detailHelps.register += "customize behavior.\n";
-detailHelps.register += "\tNote: The keyword func is require to always be the handler.\n";
-detailHelps.register += "\t\t--options flags:\n";
-detailHelps.register += flagOptions['-h'];
-detailHelps.register += flagOptions['-e'];
-detailHelps.register += flagOptions['--func'];
-detailHelps.register += "\n\t\tExamples:\n";
-detailHelps.register += "\t\t\txs.register('callMe', func);\n";
-detailHelps.register += "\t\t\txs.register('callMeWithString', riffle.want(func, String));\n";
-
-detailHelps.unregister += "\nUsage: xs.unregister('ep'); --options (flags)\n";
-detailHelps.unregister += "\tDescription: Unregister an endpoint on the current domain.\n";
-detailHelps.unregister += "\t\t--options flags:\n";
-detailHelps.unregister += flagOptions['-h'];
-detailHelps.unregister += flagOptions['-e'];
-detailHelps.unregister += "\n\t\tExamples:\n";
-detailHelps.unregister += "\t\t\txs.unregister('callMe');\n";
-
-detailHelps.subscribe += "\nUsage: xs.subscribe('channel', func); --options (flags)\n";
-detailHelps.subscribe += "\tDescription: Subscribe to a channel on this domain. By default the func handler\n";
-detailHelps.subscribe += "\twill be log to console. Use --options to customize behavior.\n";
-detailHelps.subscribe += "\t\t--options flags:\n";
-detailHelps.subscribe += "\tNote: The keyword func is require to always be the handler.\n";
-detailHelps.subscribe += flagOptions['-h'];
-detailHelps.subscribe += flagOptions['-e'];
-detailHelps.subscribe += flagOptions['--func'];
-detailHelps.subscribe += "\n\t\tExamples:\n";
-detailHelps.subscribe += "\t\t\txs.subscribe('publishToMe', func);\n";
-detailHelps.register += "\t\t\txs.subscribe('publishToMeWithString', riffle.want(func, String));\n";
-
-detailHelps.unsubscribe += "\nUsage: xs.unsubscribe('channel'); --options (flags)\n";
-detailHelps.unsubscribe += "\tDescription: Unsubscribe from a channel on the current domain.\n";
-detailHelps.unsubscribe += "\t\t--options flags:\n";
-detailHelps.unsubscribe += flagOptions['-h'];
-detailHelps.unsubscribe += flagOptions['-e'];
-detailHelps.unsubscribe += "\n\t\tExamples:\n";
-detailHelps.unsubscribe += "\t\t\txs.unsubscribe('publishToMe');\n";
-
-detailHelps.save += "\nUsage: save\n";
-detailHelps.save += "\tDescription: Save the current credentials for the connection\n";
-detailHelps.save += "\tas a profile that can be used with the -p flag authentication in\n";
-detailHelps.save += "\tthis cli util and others in this package.\n";
-
-
-detailHelps.storage += "\nUsage: xs.find(),xs.find_one(),...\n";
-detailHelps.storage += "See https://exis.io/docs/API-Reference/jsRiffle#rifflecollection for full API\n";
-detailHelps.storage += "\tDescription: Interact with a collection in a storage appliance via the xsCollection API.\n";
-detailHelps.storage += "\t\t--options flags:\n";
-detailHelps.storage += flagOptions['-h'];
-detailHelps.storage += flagOptions['-e'];
-
-detailHelps.import += "\nUsage: import -f /path/to/file.js -n name\n";
-detailHelps.import += "\tDescription: import a custom node module to be used for handling\n";
-detailHelps.import += "\tsubscriptions, registrations, or results from calls.\n";
-detailHelps.import += "\tThe specified name will be used to hold the module. If you\n";
-detailHelps.import += "\thave an existing module under the name it will be overwritten.\n";
-detailHelps.import += "\tBoth the -f and -n flags are required.\n";
-detailHelps.import += "\n\t\tExamples:\n";
-detailHelps.import += "\t\t\timport -f /home/me/handlers.js -n handlers\n";
-
-
 function cmdHelp(cmd){
-  console.log(detailHelps[cmd].help);
+  console.log(utils.help('cli_'+cmd));
 }
 
 
 function showHelp(){
-  var desc = "\n\nThis module provides a cli for making calls and interacting with\n";
-  desc +=        "services on Exis. \n";
-
-  var help = "Usage: node exis_cli.js (-flags)\n";
-  help += utils.helpFlags();
-  help += "\t\t--script /path/to/file - Run a script of instructions from a file.\n";
-  help += "\t\t\tValid commands are seperated by newlines and // indicate a comment.";
-  console.log(desc.data, help.help);
+  console.log(utils.help('exis_cli'));
 }
 
-function saveCommand(){
-  var domain = topConn.getName();
-  var token = topConn.getToken();
-  utils.saveProfile(domain, token);
+function saveCommand(command){
+  var argv = parseArgv(command.replace(/\s+/g, ' ').trim().split(' ').slice(1));
+  var name = utils.argPair(argv.n, argv.name, 'string');
+  if(name){
+    var domain = topConn.getName();
+    var token = topConn.getToken();
+    utils.saveProfile(domain, token, name);
+  }else{
+    cmdHelp('save');
+  }
   getCommand();
 }
 

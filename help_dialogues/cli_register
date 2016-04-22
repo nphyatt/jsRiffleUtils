@@ -1,0 +1,16 @@
+
+Register for calls on and endpoint. By default the func handler will log to console.
+
+Note: The keyword 'func' is required to always be the handler.
+
+Usage: xs.register('ep', func); [options]
+
+Options:
+
+    -h, --handler [import]  - specify a successHandler from a previsously imported module
+    -e, --err [import] - specify a errHandler function from a previsously imported module
+    -f, --func [import] - specify a custom handler to replace the default func from a previsously imported module
+
+Examples: 
+    xs.register('callMe', func);
+    xs.register('callMeWithString', riffle.want(func, String)); -f handler.wantString

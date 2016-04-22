@@ -1,0 +1,14 @@
+
+Save the current credentials for the connection to a profile for use
+in later authentication with the -p flag..
+
+Note: The -n or --name flag is required.
+
+Usage: save -n, --name [name]
+
+Options:
+
+    -n, --name [name]  - the name of the profile to save credentials to
+
+Examples: 
+    save -n me

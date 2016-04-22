@@ -1,0 +1,12 @@
+
+This module provides a cli for making calls and interacting with
+services on Exis. 
+
+Usage: node exis_cli.js [flags]
+
+Options: 
+    -h, --help - Show this dialogue
+    -p, --profile [domain] - Authenticate using a saved profile corresponding to the domain.
+    -e, --env - Authenticate using the enviroment variables EXIS_DOMAIN and EXIS_TOKEN.
+    -s, --script [/path/to/file] - Run a script of instructions from a file. Valid commands are 
+                                 seperated by newlines and // indicate a comment.

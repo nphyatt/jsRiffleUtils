@@ -1,0 +1,17 @@
+
+This module helps with some token management functions. You can
+easily save delete and list tokens for which you have          
+permissions saved in the Auth appliance you specify. Retrieved 
+tokens can be saved to file, or to the profiles folder for use 
+in authentication in this and other jsRiffleUtils modules.   
+
+Usage: node token_getter.js [options]
+
+Options: 
+    -h, --help - Show this dialogue
+    -p, --profile [domain] - Authenticate using a saved profile corresponding to the domain.
+    -e, --env - Authenticate using the enviroment variables EXIS_DOMAIN and EXIS_TOKEN.
+    -d, --delete - Delete the token from the specified Auth Appliance.
+    -l, --list - List the tokens belonging to the specified domain from the specified Auth Appliance.
+    -s, --save - Save the token as a profile that you can use for later authentication with the -p flag.
+    -f, --file [/path/to/file] - Save the token to the specified file.

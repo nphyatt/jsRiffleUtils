@@ -1,0 +1,25 @@
+
+Usage: [command] [options]
+
+Notes: 
+    * The 'xs' variable is always your current working domain or Appliance API.
+    * All functions using 'xs' must end in semicolon. 
+    * Registers and Subscribes Must use the keyword 'func' as the handler. 
+
+Commands: 
+    help - show this dialogue
+    help [command] - show detailed help dialogue for a command if it exists
+    use  [options] - switch the current working domain or use an Appliance API
+    xs.call('ep',...args); [options] - make a call  using the cwd
+    xs.publish('channel',...args); [options] - make a publish  using the cwd
+    xs.register('endpoint', func); [options] - register to recieve calls using the cwd
+    xs.unregister('endpoint'); [options] - unregister a call on the cwd
+    xs.subscribe('channel', func); [options] - subscribe to a channel using the cwd
+    xs.unsubscribe('channel'); [options] - unsubscribe from a channel using the cwd
+    c, clear - clear screen
+    save -n, --name [name] - save the current logged in token and domain to the named profile
+    logs - follow the logs for the current working domain
+    import -f, --file [/path/to/file] -n, --name [name] - import a node module at [path] and store under [name]
+    script -f, --file [/path/to/file] - run a script of instructions from a file valid commands are 
+                                seperated by newlines and // indicate a comment.
+    exit - exit cli

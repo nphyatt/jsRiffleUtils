@@ -17,6 +17,8 @@ colors.setTheme({
     error: 'red'
 });
 
+var pjson = require('prettyjson');
+
 var riffle = require('jsriffle');
 if(process.env.WS_URL){
   riffle.setFabric(process.env.WS_URL);
@@ -89,10 +91,21 @@ exp.getArgv = function(){
   return parseArgv;
 }
 
+exp.argPair = function(arg1, arg2, type){
+  if(typeof arg1 === type){
+    return arg1;
+  }else if(typeof arg2 === type){
+    return arg2;
+  }else{
+    return undefined;
+  }
+};
+
 exp.determineLoginMethod = function(argv, callback){
   var mainArgs = parseArgv(argv.splice(2));
-
-  if(mainArgs.e){
+  var env = exp.argPair(mainArgs.e, mainArgs.env, 'boolean');
+  var profile = exp.argPair(mainArgs.p, mainArgs.profile, 'string');
+  if(env){
     //join from env vars
     var domain = process.env.EXIS_DOMAIN;
     var token = process.env.EXIS_TOKEN;
@@ -108,9 +121,9 @@ exp.determineLoginMethod = function(argv, callback){
       user.setToken(token);
       completeJoin(callback, user);
     }
-  }else if(mainArgs.p){
-    console.log("Attempting to Join from profile ".info, mainArgs.p.info);
-    var user = loadFromProfile(mainArgs.p);
+  }else if(profile){
+    console.log("Attempting to Join from profile ".info, profile.info);
+    var user = loadFromProfile(profile);
     if(!user){
       process.exit(1);
     }
@@ -152,15 +165,16 @@ exp.getColorProfile = function(){
   return colors;
 };
 
-exp.saveProfile = function(domain, token){
-  if(!token || !domain){
-    console.log("Error: Couldn't find token/domain to save.".error);
+exp.saveProfile = function(domain, token, name){
+  if(!token || !domain || !name){
+    console.log("Error: Couldn't find token/domain/name to save.".error);
     return false;
   }
   if(!mkdir('./.xs_profiles')){
     return false;
   }
-  return saveToFile('./.xs_profiles/' + domain, token);
+  var file = domain + '\n' + token;
+  return saveToFile('./.xs_profiles/' + name, file);
 };
 
 function saveToFile(path, data){
@@ -179,24 +193,33 @@ function saveToFile(path, data){
 
 exp.saveToFile = saveToFile;
 
-function loadFromProfile(domain){
-  console.log("Attempting to Join as ".info, domain.info );
-  var user = riffle.Domain(domain);
-  var token = readFromFile('./.xs_profiles/'+ domain);
-  if(!token){
+function loadFromProfile(name){
+  console.log("Attempting to load profile for ".info, name.info );
+  var file = readFromFile('./.xs_profiles/'+ name, "Couldn't find profile " + name);
+  if(!file){
     return false;
   }
-  user.setToken(token);
+  file = file.split('\n');
+  if(file.length < 2){
+    console.log("Error: Improperly formated profile.".error);
+    return false;
+  }
+  var user = riffle.Domain(file[0]);
+  user.setToken(file[1]);
   return user;
 }
 exp.loadFromProfile = loadFromProfile;
 
-function readFromFile(path){
+function readFromFile(path, errmsg){
   var data = null;
   try{
     data = fs.readFileSync(path, 'utf8');
   }catch(e){
-    console.log("Error: ".error, e.message.error);
+    if(errmsg){
+      console.log("Error: ".error, errmsg.error);
+    }else{
+      console.log("Error: ".error, e.message.error);
+    }
     return false;
   }
   return data;
@@ -223,13 +246,29 @@ function mkdir(dir){
   return true;
 }
 
+exp.prettyPrintLoop = function(items, title, label){
+        label = label || '';
+        if(title){
+          console.log('\n' + title.help);
+        }
+        console.log('******************************'.help);
+        for(var i in items){
+          console.log(label.help + ' ' + i.help, ': \n'.help, pjson.render(items[i] ,{}));
+        }
+        console.log('******************************'.help);
+};
+
 exp.mkdir = mkdir;
 
-exp.helpFlags = function(){
-  var help = "";
-  help += "\tflags: \n";
-  help += "\t\t--help - Show this dialogue\n";
-  help += "\t\t-p domain - Authenticate using a saved profile corresponding to the domain.\n";
-  help += "\t\t-e - Authenticate using the enviroment variables EXIS_DOMAIN and EXIS_TOKEN.\n";
-  return help;
+var helps = {};
+function loadHelps(){
+  var dir = fs.readdirSync('./help_dialogues');
+  dir.forEach(function(help){
+    helps[help] = exp.readFromFile('./help_dialogues/'+help);
+  });
+}
+loadHelps();
+
+exp.help = function(name){
+  return helps[name];
 }

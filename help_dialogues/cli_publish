@@ -1,0 +1,12 @@
+
+Publish an event on the fabric using regular riffle syntax.
+
+Usage: xs.publish('ep',...args); [options]
+
+Options:
+
+    -h, --handler [import]  - specify a successHandler from a previsously imported module
+    -e, --err [import] - specify a errHandler function from a previsously imported module
+
+Examples: 
+    xs.publish('listeners', 'Hello World');

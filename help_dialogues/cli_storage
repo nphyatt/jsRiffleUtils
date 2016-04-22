@@ -1,0 +1,15 @@
+
+Interact with a collection in a storage appliance via the xsCollection API.
+
+Note: See https://exis.io/docs/API-Reference/jsRiffle#rifflecollection for full API
+
+Usage: xs.find(), xs.find_one()....
+
+Options:
+
+    -h, --handler [import]  - specify a successHandler from a previsously imported module
+    -e, --err [import] - specify a errHandler function from a previsously imported module
+
+Examples: 
+    xs.call('hi'); -e logger.Errors
+    xs.call('hi'); -h logger.Results
