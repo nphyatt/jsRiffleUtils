@@ -1,6 +1,6 @@
 module.exports = {};
 var exp = module.exports;
-var utils = require('./xs_utils.js');
+var utils = require('../xs_utils.js');
 
 exp.successHandler = function(){
   var data = JSON.stringify(arguments);
