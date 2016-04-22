@@ -20,6 +20,12 @@ colors.setTheme({
 var pjson = require('prettyjson');
 
 var riffle = require('jsriffle');
+//tmp hack until official 0.4.9 realease
+riffle.xsAuth = require('./appliances/auth.js');
+riffle.xsBouncer = require('./appliances/bouncer.js');
+riffle.xsContainers = require('./appliances/container.js');
+riffle.xsReplay = require('./appliances/replay.js');
+
 if(process.env.WS_URL){
   riffle.setFabric(process.env.WS_URL);
 }
