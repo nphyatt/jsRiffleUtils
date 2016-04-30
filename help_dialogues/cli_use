@@ -16,6 +16,7 @@ Options:
     -r,--replay [domain] - The domain of the Replay Appliance you wish to interact with.
     -s, --storage [domain] - The domain of the Storage Appliance you wish to interact with.
     -c, --collection [collection] - The name of the collection in the Storage Appliance you wish to interact with.
+    -f, --filestorage - Use the xsFileStorage API.
 
 Examples: 
     use -d xs.demo.user.app

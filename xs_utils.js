@@ -20,20 +20,14 @@ colors.setTheme({
 var pjson = require('prettyjson');
 
 var riffle = require('jsriffle');
-//tmp hack until official 0.4.9 realease
-riffle.xsAuth = require('./appliances/auth.js');
-riffle.xsBouncer = require('./appliances/bouncer.js');
-riffle.xsContainers = require('./appliances/container.js');
-riffle.xsReplay = require('./appliances/replay.js');
 
 if(process.env.WS_URL){
   riffle.setFabric(process.env.WS_URL);
 }
 
-var registrar = require('./login.js');
 if(process.env.WS_URL){
   var url = process.env.WS_URL.trim().replace(/^wss/g, 'https').replace(/^ws/g, 'http').replace(/:8000(\/wss?)?/g, ':8880');
-  registrar.setRegistrar(url);
+  riffle.setRegistrar(url);
 }
 
 require('shelljs/global');
@@ -77,7 +71,7 @@ function passLogin(callback, err, user){
 
   var xs = riffle.Domain('xs.demo');
 
-  login(xs, user).then(loginSuccess, loginError);
+  xs.login(user).then(loginSuccess, loginError);
 
   function loginSuccess(user){
     completeJoin(callback, user);
@@ -159,7 +153,7 @@ function completeJoin(callback, user){
 
 
 function login(domain, user){
-  return registrar.login.bind(domain)(user);
+  return domain.login(user);
 }
 exp.login = login;
 

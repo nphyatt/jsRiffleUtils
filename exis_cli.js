@@ -173,7 +173,7 @@ function parseCommand(err, cmd){
     }
   });
   if(!run){
-    var appl = ['Auth', 'Bouncer', 'Container', 'Replay', 'Storage'];
+    var appl = ['Auth', 'Bouncer', 'Container', 'Replay', 'Storage', 'FileStorage'];
     appl.forEach(function(name){
       if(cwd.includes(name)){
         run = runCommand;
@@ -250,6 +250,11 @@ function useCommand(command, conn){
     cwd = 'Replay[' + argv.replay + ']';
     if(!connections[cwd]){
       connections[cwd] = riffle.xsReplay(topConn.linkDomain(argv.replay));
+    }
+  }else if(argv.filestorage = utils.argPair(argv.f, argv.filestorage, 'boolean')){
+    cwd = 'FileStorage';
+    if(!connections[cwd]){
+      connections[cwd] = riffle.xsFileStorage(topConn);
     }
   }else{
     helpCommand();
